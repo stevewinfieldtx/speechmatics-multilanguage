@@ -154,7 +154,7 @@ async function start(){
     mediaStream=await navigator.mediaDevices.getUserMedia({audio:{sampleRate:16000,channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
   }catch(err){$status.textContent='⚠ Mic denied';return;}
   if(window.speechSynthesis){const s=new SpeechSynthesisUtterance('');s.volume=0;window.speechSynthesis.speak(s);}
-  const smUrl=`wss://eu2.rt.speechmatics.com/v2/auto?jwt=${jwt}`;
+  const smUrl=`wss://eu.rt.speechmatics.com/v2/auto?jwt=${jwt}`;
   smWs=new WebSocket(smUrl);
   smWs.onopen=()=>{
     console.log('[sm] Connected');
