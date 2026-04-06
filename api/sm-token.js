@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ ttl: 3600 }), // 1 hour
+      body: JSON.stringify({ ttl: 3600 }),
     });
 
     if (!r.ok) {

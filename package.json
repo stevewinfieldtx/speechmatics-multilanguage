@@ -2,5 +2,5 @@
   "name": "talkbridge-v2",
   "version": "2.0.0",
   "private": true,
-  "description": "TalkBridge v2 — Speechmatics STT+Translation, ElevenLabs TTS"
+  "description": "TalkBridge v2 — Speechmatics STT+Translation, Browser TTS. No ElevenLabs."
 }

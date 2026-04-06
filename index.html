@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>TalkBridge v2</title>
-<meta name="description" content="Real-time voice translation powered by Speechmatics + ElevenLabs.">
+<meta name="description" content="Real-time voice translation powered by Speechmatics.">
 <meta name="theme-color" content="#0b0b14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -93,7 +93,7 @@ footer{text-align:center;padding:2px 0 10px;font-size:.6rem;color:var(--muted);o
       <div class="brand-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div>
       <h1>TalkBridge<span class="v2-badge">SM</span></h1>
     </div>
-    <p class="tagline">Speechmatics STT + Translation · ElevenLabs TTS</p>
+    <p class="tagline">Speechmatics STT + Translation · Browser TTS</p>
   </header>
   <div class="lang-bar">
     <select id="lang-a" class="lang-sel"></select>
@@ -120,7 +120,7 @@ footer{text-align:center;padding:2px 0 10px;font-size:.6rem;color:var(--muted);o
     </button>
     <button class="clear" id="clear"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
-  <footer>TalkBridge v2 · Speechmatics + ElevenLabs · NYN Impact</footer>
+  <footer>TalkBridge v2 · Speechmatics · NYN Impact</footer>
 </div>
 
 <script>
@@ -128,36 +128,31 @@ footer{text-align:center;padding:2px 0 10px;font-size:.6rem;color:var(--muted);o
 'use strict';
 
 // ── LANGUAGE CATALOG ──
-// code: ISO for Speechmatics, smCode: what goes in the WS URL, tts: for ElevenLabs
 const LANGS = [
-  { code:'en', name:'English',    flag:'🇺🇸', smCode:'en', tts:'en-us' },
-  { code:'es', name:'Español',    flag:'🇲🇽', smCode:'es', tts:'es-mx' },
-  { code:'zh', name:'中文',        flag:'🇨🇳', smCode:'cmn', tts:'zh-cn' },
-  { code:'vi', name:'Tiếng Việt', flag:'🇻🇳', smCode:'vi', tts:'vi-vn' },
-  { code:'fr', name:'Français',   flag:'🇫🇷', smCode:'fr', tts:'fr-fr' },
-  { code:'de', name:'Deutsch',    flag:'🇩🇪', smCode:'de', tts:'de-de' },
-  { code:'it', name:'Italiano',   flag:'🇮🇹', smCode:'it', tts:'it-it' },
-  { code:'pt', name:'Português',  flag:'🇧🇷', smCode:'pt', tts:'pt-br' },
-  { code:'ja', name:'日本語',      flag:'🇯🇵', smCode:'ja', tts:'ja-jp' },
-  { code:'ko', name:'한국어',      flag:'🇰🇷', smCode:'ko', tts:'ko-kr' },
-  { code:'th', name:'ภาษาไทย',   flag:'🇹🇭', smCode:'th', tts:'th-th' },
-  { code:'hi', name:'हिन्दी',      flag:'🇮🇳', smCode:'hi', tts:'hi-in' },
-  { code:'ar', name:'العربية',     flag:'🇸🇦', smCode:'ar', tts:'ar-sa' },
-  { code:'ru', name:'Русский',    flag:'🇷🇺', smCode:'ru', tts:'ru-ru' },
+  { code:'en', name:'English',    flag:'🇺🇸', smCode:'en', ttsLang:'en-US' },
+  { code:'es', name:'Español',    flag:'🇲🇽', smCode:'es', ttsLang:'es-MX' },
+  { code:'zh', name:'中文',        flag:'🇨🇳', smCode:'cmn', ttsLang:'zh-CN' },
+  { code:'vi', name:'Tiếng Việt', flag:'🇻🇳', smCode:'vi', ttsLang:'vi-VN' },
+  { code:'fr', name:'Français',   flag:'🇫🇷', smCode:'fr', ttsLang:'fr-FR' },
+  { code:'de', name:'Deutsch',    flag:'🇩🇪', smCode:'de', ttsLang:'de-DE' },
+  { code:'it', name:'Italiano',   flag:'🇮🇹', smCode:'it', ttsLang:'it-IT' },
+  { code:'pt', name:'Português',  flag:'🇧🇷', smCode:'pt', ttsLang:'pt-BR' },
+  { code:'ja', name:'日本語',      flag:'🇯🇵', smCode:'ja', ttsLang:'ja-JP' },
+  { code:'ko', name:'한국어',      flag:'🇰🇷', smCode:'ko', ttsLang:'ko-KR' },
+  { code:'th', name:'ภาษาไทย',   flag:'🇹🇭', smCode:'th', ttsLang:'th-TH' },
+  { code:'hi', name:'हिन्दी',      flag:'🇮🇳', smCode:'hi', ttsLang:'hi-IN' },
+  { code:'ar', name:'العربية',     flag:'🇸🇦', smCode:'ar', ttsLang:'ar-SA' },
+  { code:'ru', name:'Русский',    flag:'🇷🇺', smCode:'ru', ttsLang:'ru-RU' },
 ];
 const byCode = c => LANGS.find(l=>l.code===c)||LANGS[0];
 
 // ── STATE ──
 let langA = localStorage.getItem('tb2-a')||'en';
 let langB = localStorage.getItem('tb2-b')||'es';
-let active = false;
-let speaking = false;
-let smWs = null;       // Speechmatics WebSocket
-let mediaStream = null;
-let audioCtx = null;
-let processor = null;
+let active = false, speaking = false;
+let smWs = null, mediaStream = null, audioCtx = null, processor = null;
 let lastOriginal = '';
-let audioPlayCtx = null; // for TTS playback
+let speakId = 0;
 
 // ── DOM ──
 const $a=document.getElementById('lang-a'),$b=document.getElementById('lang-b');
@@ -186,44 +181,39 @@ $b.onchange=()=>{langB=$b.value;if(langB===langA){langA=LANGS.find(l=>l.code!==l
 $swap.onclick=()=>{[langA,langB]=[langB,langA];$a.value=langA;$b.value=langB;save();updateHeaders();if(active){stop();setTimeout(start,500);}};
 
 // ══════════════════════════════════════════════════════════════
-//  TTS — ElevenLabs via /api/tts + Web Audio API for iOS
+//  TTS — Browser speechSynthesis only (no external API)
 // ══════════════════════════════════════════════════════════════
-function ensurePlayCtx(){
-  if(!audioPlayCtx) audioPlayCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if(audioPlayCtx.state==='suspended') audioPlayCtx.resume();
-}
-
 function speakTTS(text, lang){
   return new Promise((resolve)=>{
-    if(!text){resolve();return;}
+    if(!text || !window.speechSynthesis){resolve();return;}
+
+    const myId = ++speakId;
     speaking = true;
     $status.textContent = 'Speaking…';
-    ensurePlayCtx();
 
-    const params = new URLSearchParams({text, lang: lang.tts});
-    fetch(`/api/tts?${params}`)
-      .then(r=>{if(!r.ok) throw new Error(`TTS ${r.status}`);return r.arrayBuffer();})
-      .then(buf=>audioPlayCtx.decodeAudioData(buf))
-      .then(audioBuffer=>{
-        const src = audioPlayCtx.createBufferSource();
-        src.buffer = audioBuffer;
-        src.connect(audioPlayCtx.destination);
-        src.onended = ()=>{speaking=false;resolve();};
-        src.start(0);
-        // Safety timeout
-        setTimeout(()=>{speaking=false;resolve();}, audioBuffer.duration*1000+3000);
-      })
-      .catch(err=>{
-        console.warn('[tts] ElevenLabs failed, trying browser TTS:', err.message);
-        if(window.speechSynthesis){
-          const u=new SpeechSynthesisUtterance(text);
-          u.lang=lang.smCode;u.rate=0.95;
-          u.onend=()=>{speaking=false;resolve();};
-          u.onerror=()=>{speaking=false;resolve();};
-          window.speechSynthesis.speak(u);
-          setTimeout(()=>{speaking=false;resolve();},Math.max(3000,text.length*80+2000));
-        } else {speaking=false;resolve();}
-      });
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang.ttsLang;
+    u.rate = 0.95;
+
+    let done = false;
+    function finish(){
+      if(done || myId !== speakId) return;
+      done = true;
+      speaking = false;
+      resolve();
+    }
+
+    u.onend = finish;
+    u.onerror = finish;
+
+    window.speechSynthesis.speak(u);
+
+    // Safety timeout — iOS sometimes never fires onend
+    const safetyMs = Math.max(3000, text.length * 80 + 2000);
+    setTimeout(finish, safetyMs);
   });
 }
 
@@ -257,8 +247,11 @@ async function start(){
     return;
   }
 
-  // Unlock Web Audio for TTS on this user gesture
-  ensurePlayCtx();
+  // Unlock browser TTS on user gesture (iOS)
+  if(window.speechSynthesis){
+    const s=new SpeechSynthesisUtterance('');s.volume=0;
+    window.speechSynthesis.speak(s);
+  }
 
   // 3. Connect to Speechmatics — use 'auto' for language detection
   const smUrl = `wss://eu2.rt.speechmatics.com/v2/auto?jwt=${jwt}`;
@@ -266,7 +259,6 @@ async function start(){
 
   smWs.onopen = ()=>{
     console.log('[sm] Connected');
-    // Send StartRecognition with translation config
     smWs.send(JSON.stringify({
       message: 'StartRecognition',
       audio_format: { type:'raw', encoding:'pcm_f32le', sample_rate:16000 },
@@ -283,10 +275,7 @@ async function start(){
     }));
   };
 
-  smWs.onmessage = (e)=>{
-    const msg = JSON.parse(e.data);
-    handleSmMessage(msg);
-  };
+  smWs.onmessage = (e)=>handleSmMessage(JSON.parse(e.data));
 
   smWs.onerror = (err)=>{
     console.error('[sm] WS error:', err);
@@ -295,10 +284,7 @@ async function start(){
 
   smWs.onclose = ()=>{
     console.log('[sm] WS closed');
-    if(active){
-      $status.textContent = 'Disconnected';
-      stop();
-    }
+    if(active){$status.textContent='Disconnected';stop();}
   };
 }
 
@@ -314,10 +300,7 @@ function handleSmMessage(msg){
 
     case 'AddPartialTranscript': {
       const text = msg.metadata?.transcript || '';
-      if(text.trim()){
-        $interim.classList.add('show');
-        $interimText.textContent = text.trim();
-      }
+      if(text.trim()){$interim.classList.add('show');$interimText.textContent=text.trim();}
       break;
     }
 
@@ -326,9 +309,7 @@ function handleSmMessage(msg){
       if(text.trim()){
         lastOriginal = text.trim();
         $interim.classList.remove('show');
-        // Detect which language was spoken from the results
-        const detectedLang = msg.results?.[0]?.alternatives?.[0]?.language || '';
-        console.log('[sm] Transcript:', lastOriginal, 'detected:', detectedLang);
+        console.log('[sm] Transcript:', lastOriginal);
       }
       break;
     }
@@ -338,27 +319,20 @@ function handleSmMessage(msg){
       const translated = msg.results?.map(r=>r.content).join(' ').trim() || '';
       if(!translated || !lastOriginal) break;
 
-      // Figure out direction: which language was the translation INTO?
-      // If translated into langB, the speaker spoke langA
-      // If translated into langA, the speaker spoke langB
       const la = byCode(langA), lb = byCode(langB);
       let fromLang, toLang;
 
       if(targetLang === lb.smCode || targetLang === langB){
-        // Translation is into langB → speaker spoke langA
         fromLang = la; toLang = lb;
       } else if(targetLang === la.smCode || targetLang === langA){
-        // Translation is into langA → speaker spoke langB
         fromLang = lb; toLang = la;
       } else {
-        // Fallback — just use first pair
         fromLang = la; toLang = lb;
       }
 
       console.log('[sm] Translation:', lastOriginal, '→', translated, '(', targetLang, ')');
       addMessage(lastOriginal, translated, fromLang, toLang);
 
-      // Speak the translation
       speakTTS(translated, toLang).then(()=>{
         $status.textContent = active ? 'Listening…' : 'Ready';
       });
@@ -367,70 +341,49 @@ function handleSmMessage(msg){
       break;
     }
 
-    case 'AddPartialTranslation':
-      // Could show streaming translation but skip for now
-      break;
+    case 'AddPartialTranslation': break;
 
     case 'Error':
       console.error('[sm] Error:', msg);
       $status.textContent = `⚠ ${msg.reason || msg.type}`;
       break;
 
-    case 'AudioAdded':
-    case 'Info':
-      break;
-
-    default:
-      console.log('[sm]', msg.message, msg);
+    case 'AudioAdded': case 'Info': break;
+    default: console.log('[sm]', msg.message);
   }
 }
 
 // ── MIC CAPTURE — 16kHz PCM Float32 ──
 function startMicCapture(){
   if(!mediaStream || !smWs) return;
-
   audioCtx = new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
   const source = audioCtx.createMediaStreamSource(mediaStream);
-
-  // ScriptProcessor for broad compatibility (including iOS Safari)
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
   processor.onaudioprocess = (e)=>{
     if(!active || !smWs || smWs.readyState !== WebSocket.OPEN) return;
-    if(speaking) return; // mute mic while TTS plays
+    if(speaking) return;
     const pcm = e.inputBuffer.getChannelData(0);
-    // Send as raw Float32 binary
     smWs.send(pcm.buffer.slice(0));
   };
-
   source.connect(processor);
-  processor.connect(audioCtx.destination); // required for ScriptProcessor to fire
+  processor.connect(audioCtx.destination);
 }
 
 function stop(){
   active = false;
   $mic.classList.remove('on');
-
-  // Close Speechmatics
   if(smWs){
-    try{
-      if(smWs.readyState===WebSocket.OPEN) smWs.send(JSON.stringify({message:'EndOfStream',last_seq_no:0}));
-      smWs.close();
-    }catch(e){}
-    smWs = null;
+    try{if(smWs.readyState===WebSocket.OPEN)smWs.send(JSON.stringify({message:'EndOfStream',last_seq_no:0}));smWs.close();}catch(e){}
+    smWs=null;
   }
-
-  // Stop mic
-  if(processor){try{processor.disconnect();}catch(e){} processor=null;}
-  if(audioCtx){try{audioCtx.close();}catch(e){} audioCtx=null;}
+  if(processor){try{processor.disconnect();}catch(e){}processor=null;}
+  if(audioCtx){try{audioCtx.close();}catch(e){}audioCtx=null;}
   if(mediaStream){mediaStream.getTracks().forEach(t=>t.stop());mediaStream=null;}
-
-  $status.textContent = 'Ready';
+  $status.textContent='Ready';
   $interim.classList.remove('show');
 }
 
-function toggle(){
-  if(active) stop(); else start();
-}
+function toggle(){ if(active) stop(); else start(); }
 
 // ── UI — TWO-COLUMN MESSAGES ──
 function addMessage(sourceText, translatedText, fromLang, toLang){
@@ -439,7 +392,6 @@ function addMessage(sourceText, translatedText, fromLang, toLang){
   const spokenIsA=(fromLang.code===langA);
   const cellA=document.createElement('div');cellA.className='msg-cell col-a';
   const cellB=document.createElement('div');cellB.className='msg-cell col-b';
-
   if(spokenIsA){
     cellA.classList.add('spoken');cellA.textContent=sourceText;
     cellB.classList.add('translated');cellB.innerHTML=escHtml(translatedText)+replayBtnHtml();
@@ -453,16 +405,16 @@ function addMessage(sourceText, translatedText, fromLang, toLang){
   $feed.insertBefore(row,$interim);
   requestAnimationFrame(()=>{$feed.scrollTop=$feed.scrollHeight;});
 }
-
-function replayBtnHtml(){
-  return `<button class="replay-btn" aria-label="Replay"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.5v7a4.49 4.49 0 0 0 2.5-3.5z"/></svg></button>`;
-}
+function replayBtnHtml(){return `<button class="replay-btn" aria-label="Replay"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8.5v7a4.49 4.49 0 0 0 2.5-3.5z"/></svg></button>`;}
 function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
 // ── EVENTS ──
 $mic.onclick=toggle;
 $clear.onclick=()=>{$feed.querySelectorAll('.msg-row').forEach(el=>el.remove());$empty.style.display='';};
 document.onkeydown=e=>{if(e.target.tagName==='SELECT')return;if(e.code==='Space'){e.preventDefault();toggle();}};
+
+// Preload voices
+if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();}
 
 })();
 </script>
